@@ -10,23 +10,14 @@ class LogParser:
     def get_new_records(self) -> List[str]:
         raise NotImplemented('Override this')
 
+    # noinspection PyUnusedLocal
     @staticmethod
     def parse_line_time(parsed_rule: Dict[str, str]) -> Optional[datetime]:
         return datetime.now()
 
     @staticmethod
-    def parse_line_ip(parsed_rule: Dict[str, str]) -> Optional[str]:
-        import re
-        if 'IP' not in parsed_rule:
-            return None
-
-        # find IPv4 IP
-        re_match = re.finditer(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}', parsed_rule['IP'])
-        if re_match:
-            return next(re_match).group()
-
-        # find IPv6 IP TODO
-        return parsed_rule['IP']
+    def parse_line_scope(parsed_rule: Dict[str, str]) -> Optional[str]:
+        return None
 
 
 class LineLogParser(LogParser):
@@ -41,3 +32,16 @@ class LineLogParser(LogParser):
             self.__file_pos = f.tell()
             return lines
 
+    @staticmethod
+    def parse_line_scope(parsed_rule: Dict[str, str]) -> Optional[str]:
+        import re
+        if 'IP' not in parsed_rule:
+            return None
+
+        # find IPv4 IP
+        re_match = re.finditer(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}', parsed_rule['IP'])
+        if re_match:
+            return next(re_match).group()
+
+        # find IPv6 IP TODO
+        return parsed_rule['IP']

@@ -6,7 +6,7 @@ from lib import LogParser, LineLogParser, LogRule
 
 
 class MatchingRecord(NamedTuple):
-    ip: str
+    scope: str
     date: datetime
     data: Dict[str, str]
     record: str
@@ -25,13 +25,13 @@ class LogFile:
                 rule_match = rule.parse_record(record)
                 if rule_match is not None:
                     matching_record = MatchingRecord(
-                        ip=self.__parser.parse_line_ip(rule_match),
+                        scope=self.__parser.parse_line_scope(rule_match),
                         date=self.__parser.parse_line_time(rule_match),
                         data=rule_match,
                         record=record
                     )
 
-                    assert matching_record.ip is not None
+                    assert matching_record.scope is not None
                     assert matching_record.date is not None
 
                     yield matching_record
