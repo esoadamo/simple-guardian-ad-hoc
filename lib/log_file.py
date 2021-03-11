@@ -2,7 +2,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Iterator, NamedTuple, Set
 
-from lib import LogParser, LineLogParser, LogRule
+from lib import LogParser, LinuxLineLogParser, LogRule
 
 
 class MatchingRecord(NamedTuple):
@@ -16,7 +16,7 @@ class LogFile:
     def __init__(self, path: Path,
                  parser: Optional[LogParser] = None):
         self.__path = path
-        self.__parser = parser if parser is not None else LineLogParser(path)
+        self.__parser = parser if parser is not None else LinuxLineLogParser(path)
 
     def find_new_matching_records(self, rules: Set[LogRule]) -> Iterator[MatchingRecord]:
         new_records = self.__parser.get_new_records()

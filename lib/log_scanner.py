@@ -1,6 +1,6 @@
 from typing import List, Set, Dict
 from threading import Thread
-from time import sleep
+from time import time, sleep
 
 from lib import AppProfile, LogFile, LogRule, RecordsDatabase
 
@@ -26,6 +26,13 @@ def start_scan_profiles(profiles: List[AppProfile],
 
 def __thread_log_scanner(log: LogFile, rules: Set[LogRule], database: RecordsDatabase):
     while True:
+        time_start = time()
+
         for record in log.find_new_matching_records(rules):
             database.add_record(record)
-        sleep(scan_time)
+
+        # max 10 Hz
+        time_taken_min = 0.1  # s
+        time_taken = time() - time_start
+        if time_taken < time_taken_min:
+            sleep(time_taken_min - time_taken)
