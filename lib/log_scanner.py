@@ -1,5 +1,5 @@
 from typing import List, Set, Dict
-from threading import Thread, Lock
+from threading import Thread, Event
 from time import time, sleep
 
 from lib import AppProfile, LogFile, LogRule, RecordsDatabase
@@ -17,10 +17,10 @@ def start_scan_profiles(profiles: List[AppProfile],
         logs[profile.log].update(profile.rules)
     del profile
 
-    notification = Lock()
+    wake_records_processor = Event()
 
-    threads = [Thread(target=__thread_attacks_processor, daemon=True, args=[notification, database, scan_range])]
-    threads.extend([Thread(daemon=True, target=__thread_log_scanner, args=[log, rules, database, notification])
+    threads = [Thread(target=__thread_records_processor, daemon=True, args=[wake_records_processor, database, scan_range])]
+    threads.extend([Thread(daemon=True, target=__thread_log_scanner, args=[log, rules, database, wake_records_processor])
                     for log, rules in logs])
     del logs
     for t in threads:
@@ -29,15 +29,14 @@ def start_scan_profiles(profiles: List[AppProfile],
         t.join()
 
 
-def __thread_attacks_processor(notification: Lock, database: RecordsDatabase, scan_range: int):
+def __thread_records_processor(wake_signal: Event, database: RecordsDatabase, scan_range: int):
     while True:
-        notification.acquire()
-        notification.acquire()
+        wake_signal.wait()
 
         # process database
 
 
-def __thread_log_scanner(log: LogFile, rules: Set[LogRule], database: RecordsDatabase, process_notification: Lock):
+def __thread_log_scanner(log: LogFile, rules: Set[LogRule], database: RecordsDatabase, wake_records_processor: Event):
     while True:
         time_start = time()
 
@@ -47,7 +46,7 @@ def __thread_log_scanner(log: LogFile, rules: Set[LogRule], database: RecordsDat
             database.add_record(record)
 
         if new_record:
-            process_notification.release()
+            wake_records_processor.set()
 
         # max 10 Hz
         time_taken_min = 0.1  # s
